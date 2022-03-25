@@ -1,7 +1,7 @@
 import http, { IncomingMessage, Server, ServerResponse } from 'http';
 import fs from 'fs';
 import { v4 as uuid } from 'uuid';
-let format = require('./data/format.json');
+let database = require('./data/database.json');
 
 const server: Server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
@@ -11,7 +11,7 @@ const server: Server = http.createServer(
           fs.mkdir('data', () => {
             fs.writeFile(
               './data/database.json',
-              JSON.stringify(format, null, ' '),
+              JSON.stringify(database, null, ' '),
               'utf8',
               (err: any) => {
                 if (err) {
@@ -21,11 +21,11 @@ const server: Server = http.createServer(
             );
           });
 
-          console.log(format);
-          console.log(`${format.length} data ready!`);
+          console.log(database);
+          console.log(`${database.length} data ready!`);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(format));
+          res.end(JSON.stringify(database));
         }
         break;
       case 'POST':
@@ -65,24 +65,26 @@ const server: Server = http.createServer(
 
               // Model ...
               const newData: any = { id: uuid(), ...data };
-              const dataCount: number = format.push(newData);
+              const dataCount: number = database.push(newData);
               console.log(newData);
               console.log(
                 `Data with id ${newData.id} is successfully added to database...`
               );
 
-              // // Util...
-              // fs.writeFile('./data/database.json', JSON.stringify(format, null, ' '),'utf8', (err) => {});
-
-              fs.writeFile('./data/database.json', body, 'utf8', (err: any) => {
-                if (err) {
-                  console.log("Can't find data");
-                  return null;
+              fs.writeFile(
+                './data/database.json',
+                JSON.stringify(database, null, ' '),
+                'utf8',
+                (err: any) => {
+                  if (err) {
+                    console.log("Can't find data");
+                    return null;
+                  }
+                  console.log(`File ${dataCount} created successfully...`);
                 }
-                console.log(`File ${dataCount} created successfully...`);
-              });
+              );
               res.writeHead(201, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(newData));
+              res.end(JSON.stringify(database));
             });
           }
         }
@@ -90,8 +92,10 @@ const server: Server = http.createServer(
       case 'PUT':
         if (req.url?.match(/\/data\/update\/([0-9A-Za-z]+)/)) {
           const id: string = req.url.split('/')[3];
-          const newFormat: any = format.find((dataId: any) => dataId.id === id);
-          if (!newFormat) {
+          const newdatabase: any = database.find(
+            (dataId: any) => dataId.id === id
+          );
+          if (!newdatabase) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Data not Found' }));
           } else {
@@ -113,40 +117,45 @@ const server: Server = http.createServer(
                 employees,
               } = JSON.parse(body);
 
-              const dataFormat: any = {
-                organization: organization || newFormat.organization,
-                createdAt: createdAt || newFormat.createdAt,
-                updatedAt: updatedAt || newFormat.updatedAt,
-                products: products || newFormat.products,
-                marketValue: marketValue || newFormat.marketValue,
-                address: address || newFormat.address,
-                ceo: ceo || newFormat.ceo,
-                country: country || newFormat.country,
-                noOfEmployees: noOfEmployees || newFormat.noOfEmployees,
-                employees: employees || newFormat.employees,
+              const datadatabase: any = {
+                organization: organization || newdatabase.organization,
+                createdAt: createdAt || newdatabase.createdAt,
+                updatedAt: updatedAt || newdatabase.updatedAt,
+                products: products || newdatabase.products,
+                marketValue: marketValue || newdatabase.marketValue,
+                address: address || newdatabase.address,
+                ceo: ceo || newdatabase.ceo,
+                country: country || newdatabase.country,
+                noOfEmployees: noOfEmployees || newdatabase.noOfEmployees,
+                employees: employees || newdatabase.employees,
               };
 
               // Model ...
-              const index: number = format.findIndex(
+              const index: number = database.findIndex(
                 (dataId: any) => dataId.id === id
               );
-              format[index] = { id, ...dataFormat };
-              const updFormat: any = format[index];
-              console.log(updFormat);
+              database[index] = { id, ...datadatabase };
+              const upddatabase: any = database[index];
+              console.log(upddatabase);
               console.log(
-                `Data with id ${updFormat.id} is successfully updated...`
+                `Data with id ${upddatabase.id} is successfully updated...`
               );
 
               // Util...
-              fs.writeFile('./data/database.json', body, 'utf8', (err: any) => {
-                if (err) {
-                  console.log("Can't find data");
-                  return null;
+              fs.writeFile(
+                './data/database.json',
+                JSON.stringify(database, null, ' '),
+                'utf8',
+                (err: any) => {
+                  if (err) {
+                    console.log("Can't find data");
+                    return null;
+                  }
+                  console.log(`File ${index} updated successfully...`);
                 }
-                console.log(`File ${index} updated successfully...`);
-              });
+              );
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(updFormat));
+              res.end(JSON.stringify(upddatabase));
             });
           }
         }
@@ -154,15 +163,30 @@ const server: Server = http.createServer(
       case 'DELETE':
         if (req.url?.match(/\/data\/delete\/([0-9A-Za-z]+)/)) {
           const id: string = req.url.split('/')[3];
-          const newFormat: any = format.find((dataId: any) => dataId.id === id);
-          if (!newFormat) {
+          const newdatabase: any = database.find(
+            (dataId: any) => dataId.id === id
+          );
+          if (!newdatabase) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Data not Found' }));
           } else {
-            format = format.filter((data: any) => data.id !== id);
-            console.log(format);
+            database = database.filter((data: any) => data.id !== id);
+            console.log(database);
             console.log(`Data ${id} removed...`);
-            console.log(`${format.length} files in database...`);
+            console.log(`${database.length} files in database...`);
+
+            fs.writeFile(
+              './data/database.json',
+              JSON.stringify(database, null, ' '),
+              'utf8',
+              (err: any) => {
+                if (err) {
+                  console.log("Can't find data");
+                  return null;
+                }
+                console.log('File deleted successfully...');
+              }
+            );
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: `Data ${id} removed` }));
